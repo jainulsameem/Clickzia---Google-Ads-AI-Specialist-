@@ -1,6 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { AdCopy, OptimizationAnalysis, NegativeKeyword } from '../types';
 
+// FIX: Corrected API key access to use `process.env.API_KEY` to align with @google/genai SDK guidelines and resolve the TypeScript error related to `import.meta.env`.
 if (!process.env.API_KEY) {
     throw new Error("API_KEY environment variable not set");
 }
