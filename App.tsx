@@ -65,7 +65,6 @@ const App: React.FC = () => {
             />
           </div>
         </div>
-
         <div className="mt-6">
           {renderTabContent()}
         </div>

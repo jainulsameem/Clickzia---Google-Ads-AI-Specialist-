@@ -9,16 +9,10 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const model = 'gemini-2.5-flash';
 
+// FIX: Simplify JSON parsing. With `responseMimeType: "application/json"`, the API returns a clean JSON string, so stripping markdown is not needed.
 const parseJsonResponse = <T,>(text: string): T | null => {
     try {
-        // Find the start and end of the JSON block
-        const startIndex = text.indexOf('```json');
-        const endIndex = text.lastIndexOf('```');
-        if (startIndex === -1 || endIndex === -1) {
-            return JSON.parse(text);
-        }
-        const jsonText = text.substring(startIndex + 7, endIndex).trim();
-        return JSON.parse(jsonText);
+        return JSON.parse(text);
     } catch (e) {
         console.error("Failed to parse JSON response:", text, e);
         return null;
@@ -56,8 +50,7 @@ export const generateAdCopy = async (keywords: string): Promise<AdCopy | null> =
             },
         });
         
-        const textResponse = response.text;
-        return parseJsonResponse<AdCopy>(textResponse);
+        return parseJsonResponse<AdCopy>(response.text);
     } catch (error) {
         console.error("Error generating ad copy:", error);
         return null;
@@ -103,8 +96,7 @@ export const analyzePerformance = async (keywords: string, adCopy: string, landi
             }
         });
 
-        const textResponse = response.text;
-        return parseJsonResponse<OptimizationAnalysis>(textResponse);
+        return parseJsonResponse<OptimizationAnalysis>(response.text);
     } catch (error) {
         console.error("Error analyzing performance:", error);
         return null;
@@ -139,8 +131,7 @@ export const findNegativeKeywords = async (keywords: string): Promise<NegativeKe
                 }
             }
         });
-        const textResponse = response.text;
-        return parseJsonResponse<NegativeKeyword[]>(textResponse);
+        return parseJsonResponse<NegativeKeyword[]>(response.text);
     } catch (error) {
         console.error("Error finding negative keywords:", error);
         return null;

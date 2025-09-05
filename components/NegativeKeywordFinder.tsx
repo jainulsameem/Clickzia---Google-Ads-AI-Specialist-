@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { findNegativeKeywords } from '../services/geminiService';
 import type { NegativeKeyword } from '../types';
+import { DownloadIcon } from './icons/DownloadIcon';
 
 const NegativeKeywordFinder: React.FC = () => {
   const [keywords, setKeywords] = useState('');
@@ -30,7 +31,27 @@ const NegativeKeywordFinder: React.FC = () => {
       setIsLoading(false);
     }
   }, [keywords]);
+
+  const keywordsToCsv = (data: NegativeKeyword[]): string => {
+      const header = ['Keyword', 'Match Type'];
+      const rows = data.map(item => [`"${item.keyword.replace(/"/g, '""')}"`, item.matchType]);
+      return [header.join(','), ...rows.map(row => row.join(','))].join('\n');
+  };
   
+  const handleDownloadCsv = useCallback(() => {
+    if (!negativeKeywords) return;
+    const csvContent = keywordsToCsv(negativeKeywords);
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'negative-keywords.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [negativeKeywords]);
+
   const getMatchTypeClass = (matchType: 'Broad' | 'Phrase' | 'Exact') => {
     switch(matchType) {
         case 'Broad': return 'bg-purple-600/50 text-purple-200 border-purple-500';
@@ -55,19 +76,29 @@ const NegativeKeywordFinder: React.FC = () => {
         />
 
         {error && <p className="text-red-400 mt-3">{error}</p>}
-
-        <button
-          onClick={handleFind}
-          disabled={isLoading}
-          className="mt-6 w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 disabled:bg-slate-500 disabled:cursor-not-allowed transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-blue-500"
-        >
-          {isLoading ? 'Finding...' : 'Find Negative Keywords'}
-        </button>
+        
+        <div className="mt-6">
+            <button
+              onClick={handleFind}
+              disabled={isLoading}
+              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 disabled:bg-slate-500 disabled:cursor-not-allowed transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-blue-500"
+            >
+              {isLoading ? 'Finding...' : 'Find Negative Keywords'}
+            </button>
+        </div>
       </div>
 
       {negativeKeywords && (
         <div className="mt-10 bg-slate-800 rounded-xl shadow-lg p-6">
-           <h3 className="text-xl font-semibold text-blue-400 mb-4">Suggested Negative Keywords</h3>
+           <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold text-blue-400">Suggested Negative Keywords</h3>
+                <div className="flex gap-2">
+                    <button onClick={handleDownloadCsv} className="inline-flex items-center px-3 py-2 bg-slate-700 text-sm text-slate-200 rounded-lg hover:bg-slate-600">
+                        <DownloadIcon />
+                        <span className="ml-2">Download CSV</span>
+                    </button>
+                </div>
+           </div>
             <div className="overflow-x-auto">
                 <table className="w-full text-left">
                     <thead className="border-b border-slate-600 text-slate-400">
